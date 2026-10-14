@@ -15,7 +15,7 @@ color-scheme:dark;
 }
 html[lang="ar"]{--f-head:"Amiri","Geeza Pro",Georgia,serif;--f-body:"Tajawal","Geeza Pro",Tahoma,sans-serif}
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{scroll-behavior:auto}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 body{background:var(--ink);color:var(--ivory);font-family:var(--f-body);font-weight:300;font-size:16.5px;line-height:1.65;overflow-x:hidden}
 html[lang="ar"] body{font-weight:400;font-size:17px;line-height:1.8}
@@ -554,6 +554,17 @@ if(rvPending.length) rvPending=rvPending.filter(el=>{if(el.getBoundingClientRect
 let tk=false; addEventListener("scroll",()=>{if(!tk){tk=true;requestAnimationFrame(()=>{onScroll();tk=false;});}},{passive:true});
 addEventListener("resize",onScroll);
 heroImg.addEventListener("animationend",()=>{heroImg.style.animation="none";onScroll();});
+/* ---------- anchor scroll ---------- */
+function smoothTo(el){
+const off=()=>topBar.offsetHeight-1, tgt=()=>Math.max(0,Math.min(el.getBoundingClientRect().top+scrollY-off(),document.documentElement.scrollHeight-innerHeight));
+if(reduce){scrollTo(0,tgt());return;}
+const y0=scrollY,t0=performance.now(),dur=Math.min(1200,Math.max(450,Math.abs(tgt()-y0)*.35));
+let stop=false;const cancel=()=>{stop=true;};
+addEventListener("wheel",cancel,{passive:true,once:true});addEventListener("touchmove",cancel,{passive:true,once:true});
+(function step(now){if(stop)return;const k=Math.min(1,(now-t0)/dur),e=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;
+scrollTo(0,y0+(tgt()-y0)*e);if(k<1)requestAnimationFrame(step);else{removeEventListener("wheel",cancel);removeEventListener("touchmove",cancel);}})(t0);
+}
+document.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener("click",ev=>{const id=a.getAttribute("href").slice(1),el=id&&document.getElementById(id);if(!el)return;ev.preventDefault();smoothTo(el);}));
 /* ---------- 3D JT emblem ---------- */
 function initLogo(){
 const canvas=document.getElementById("logo");
